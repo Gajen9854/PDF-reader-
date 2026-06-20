@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Portable PDF Reader</title>
+<link rel="stylesheet" href="style.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.15.349/pdf.min.js"></script>
+</head>
+
+<body class="day">
+
+<!-- Top Navigation Bar -->
+<div id="navbar">
+  <div class="nav-left">
+    <h1>📖 PDF Reader</h1>
+  </div>
+  <div class="nav-center">
+    <span id="page-info">Page 1</span>
+  </div>
+  <div class="nav-right">
+    <div class="zoom-controls">
+      <button id="zoom-fit" class="zoom-btn" title="Fit to Screen">🔲</button>
+      <button id="zoom-50" class="zoom-btn" title="50%">50%</button>
+      <button id="zoom-100" class="zoom-btn" title="100%">100%</button>
+      <button id="zoom-150" class="zoom-btn" title="150%">150%</button>
+      <select id="zoom-select" class="zoom-select">
+        <option value="fit">Fit Screen</option>
+        <option value="50">50%</option>
+        <option value="100">100%</option>
+        <option value="150">150%</option>
+        <option value="200">200%</option>
+      </select>
+    </div>
+    <input type="file" id="pdf-upload" accept=".pdf" hidden/>
+    <button id="upload-btn" title="Upload PDF">📤 Upload</button>
+    <button id="settings-btn" title="Settings">⚙️</button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Settings</h2>
+      <button class="close-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting-group">
+        <label>Theme:</label>
+        <div class="theme-toggle">
+          <button id="theme-day" class="theme-btn active">☀️ Day</button>
+          <button id="theme-night" class="theme-btn">🌙 Night</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label>Highlight Color:</label>
+        <div class="color-palette">
+          <input type="color" id="highlight-color" value="#FFFF00" title="Custom color"/>
+          <button class="color-btn" data-color="#FFFF00" title="Yellow">🟨</button>
+          <button class="color-btn" data-color="#FFB6C1" title="Pink">💗</button>
+          <button class="color-btn" data-color="#90EE90" title="Green">🟩</button>
+          <button class="color-btn" data-color="#87CEEB" title="Blue">🟦</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Left sidebar – chapters + notebook -->
+<div id="sidebar-left">
+  <div class="sidebar-tabs">
+    <button class="tab-btn active" data-tab="chapters">📑 Chapters</button>
+    <button class="tab-btn" data-tab="notebook">📓 Notebook</button>
+  </div>
+  
+  <div class="tab-content active" id="chapters-tab">
+    <div id="chapters" class="chapters-list"></div>
+  </div>
+  
+  <div class="tab-content" id="notebook-tab">
+    <textarea id="notebook" placeholder="Your notes here..."></textarea>
+  </div>
+</div>
+
+<!-- PDF viewer (canvas) -->
+<div id="viewer-container">
+  <div id="canvas-wrapper">
+    <canvas id="pdf-canvas"></canvas>
+  </div>
+</div>
+
+<!-- Right sidebar – dictionary + controls -->
+<div id="sidebar-right">
+  <div class="sidebar-tabs">
+    <button class="tab-btn active" data-tab="dict">📚 Dictionary</button>
+    <button class="tab-btn" data-tab="tools">🛠️ Tools</button>
+  </div>
+  
+  <div class="tab-content active" id="dict-tab">
+    <div class="dict-search">
+      <input type="text" id="dict-search-input" placeholder="Search a word..." />
+      <button id="dict-search-btn">🔍</button>
+    </div>
+    <div id="dictionary-panel">
+      <p class="placeholder">Select a word to see its definition...</p>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="tools-tab">
+    <div class="tools-section">
+      <h4>Highlighting</h4>
+      <div class="color-palette">
+        <input type="color" id="tools-highlight-color" value="#FFFF00" title="Custom highlight color"/>
+        <button class="color-btn" data-color="#FFFF00" title="Yellow">🟨</button>
+        <button class="color-btn" data-color="#FFB6C1" title="Pink">💗</button>
+        <button class="color-btn" data-color="#90EE90" title="Green">🟩</button>
+        <button class="color-btn" data-color="#87CEEB" title="Blue">🟦</button>
+      </div>
+      <button id="clear-highlights-btn">🗑️ Clear Highlights</button>
+    </div>
+
+    <div class="tools-section">
+      <h4>Pencil Drawing</h4>
+      <div class="pencil-controls">
+        <button id="pencil-toggle" class="tool-btn" title="Toggle Pencil">✏️ Pencil</button>
+        <div class="color-palette">
+          <input type="color" id="pencil-color" value="#000000" title="Pencil color"/>
+          <button class="color-btn pencil-color" data-color="#000000" title="Black">⚫</button>
+          <button class="color-btn pencil-color" data-color="#FF0000" title="Red">🔴</button>
+          <button class="color-btn pencil-color" data-color="#0000FF" title="Blue">🔵</button>
+          <button class="color-btn pencil-color" data-color="#008000" title="Green">💚</button>
+        </div>
+        <label for="pencil-size">Size:</label>
+        <input type="range" id="pencil-size" min="1" max="10" value="2" class="pencil-size-slider" title="Pencil size"/>
+      </div>
+      <button id="clear-pencil-btn">✏️ Clear Pencil</button>
+    </div>
+
+    <div class="tools-section">
+      <h4>Add Text Note</h4>
+      <input type="text" id="text-note-input" placeholder="Enter text note..." class="text-input"/>
+      <button id="add-text-note-btn">📝 Add Note</button>
+      <button id="clear-text-notes-btn">📝 Clear Notes</button>
+    </div>
+
+    <div class="tools-section">
+      <h4>Eraser</h4>
+      <button id="eraser-toggle" class="tool-btn" title="Toggle Eraser">🧹 Eraser</button>
+      <label for="eraser-size">Size:</label>
+      <input type="range" id="eraser-size" min="5" max="30" value="15" class="eraser-size-slider" title="Eraser size"/>
+    </div>
+  </div>
+</div>
+
+<!-- Text Reader Control Bar (bottom) -->
+<div id="reader-bar">
+  <div class="reader-controls-left">
+    <button id="prev-page" class="nav-btn" title="Previous Page">◀ Prev</button>
+    <span id="page-counter" class="page-counter"></span>
+    <button id="next-page" class="nav-btn" title="Next Page">Next ▶</button>
+  </div>
+  
+  <div class="reader-controls-center">
+    <button id="play-btn" class="reader-btn" title="Read page aloud">▶ Read</button>
+    <button id="pause-btn" class="reader-btn hidden" title="Pause">⏸ Pause</button>
+    <button id="stop-btn" class="reader-btn" title="Stop reading">⏹ Stop</button>
+  </div>
+  
+  <div class="reader-controls-right">
+    <label for="voice-select">🎙️</label>
+    <select id="voice-select" class="voice-select" title="Reader Voice"></select>
+    <label for="volume-control">🔊</label>
+    <input type="range" id="volume-control" class="volume-slider" min="0" max="100" value="50" title="Volume"/>
+    <label for="rate-control">⏱️</label>
+    <input type="range" id="rate-control" class="rate-slider" min="0.5" max="2" step="0.1" value="1" title="Speed"/>
+  </div>
+</div>
+
+<!-- Selection Copy Toast -->
+<div id="copy-toast" class="toast hidden">
+  ✓ Copied to clipboard!
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
