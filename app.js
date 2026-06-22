@@ -16,7 +16,10 @@ let state = {
 let pdfDoc = null;
 let currentSpeechUtterance = null;
 let pdfScale = 1.5;
-
+document.addEventListener("DOMContentLoaded", () => {
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/pdf.worker.min.js';
+    // Your pdfjsLib code goes here
+});
 /* ========== LOAD/SAVE STATE ========== */
 function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
