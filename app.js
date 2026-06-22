@@ -18,7 +18,7 @@ let currentSpeechUtterance = null;
 let pdfScale = 1.5;
 document.addEventListener("DOMContentLoaded", () => {
   
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
     // Your pdfjsLib code goes here
 });
 /* ========== LOAD/SAVE STATE ========== */
